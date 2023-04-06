@@ -1,58 +1,64 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Optional
+from typing import TYPE_CHECKING
+
+
+if TYPE_CHECKING:
+    from src.mobj_types.mobj_type import MobjType
+    from src.mobjs.variable import Variable
 
 
 class Mobj(ABC):
-    """A representation of a mathematical object, such as a set or a proposition.
-    Variables, types of propositions (implication, conjunction) and types of sets (union, cartesian product) are all examples of Mobjs.
-
-    :param variables: All variables that appear in the Mobj, like A in 'A implies B'
-    :type variables: set[str]
-    :param defined_variables: All variables that are defined in the Mobj, like x in '{x | x is a natural number}'
-    :type defined_variables: set[str]
-    """
-
-    _variables: set[str]
-    _defined_variables: set[str]
+    @property
+    @abstractmethod
+    def type(self) -> MobjType:
+        """Returns the type of the mobj"""
 
     @property
+    @abstractmethod
     def variables(self) -> set[str]:
-        """All variables that appear in the Mobj, like A in 'A implies B'"""
-        return self._variables
+        """Returns the variables that are used in the mobj.
+        Example: (x + y) -> {x, y}
+        """
 
     @property
+    @abstractmethod
     def defined_variables(self) -> set[str]:
-        """All variables that are defined in the Mobj, like x in '{x | x is a natural number}'"""
-        return self._defined_variables
+        """Returns the variables that are defined in the mobj
+        Example: (forall x: x > y) -> {x}
+        """
 
-    def __repr__(self) -> str:
-        return str(self)
+    @property
+    @abstractmethod
+    def values(self) -> tuple[Mobj]:
+        """Returns the values (childs mobj) that are used in the mobj.
+        Example: (A and B) => (A or B) -> ((A and B), (A or B))
+        """
 
     @abstractmethod
-    def __str__(self) -> str:
-        """Create a string representation of the Mobj"""
+    def evaluate(self, values: dict[str, Mobj]) -> Mobj:
+        """Evaluate the Mobj substituing some variables for other Mobjs
+        Example: (A => B).evaluate({'A': (A and B), 'B': (A or B)}) -> (A and B) => (A or B)
+        """
 
     @abstractmethod
-    def eval(self, value_dict: dict[str, Mobj]) -> Mobj:
-        """Evaluate the Mobj substituing some variables for other Mobjs"""
+    def create_dictionary_from(self, evaluation: Mobj) -> dict[str, Mobj]:
+        """Create a dictionary from this mobj to another mobj,
+        with variable names from self as keys and mobjs from evaluation as values.
+        Example: (A => B),  (A and B) => (A or B) -> {'A': (A and B), 'B': (A or B)}
+        """
 
-    @abstractmethod
     def get_sub_mobj(self, *indexes: int) -> Mobj:
-        """Get a child mobj of the values of self"""
+        """Get a child mobj by index
+        Example: (A and B) => (C or D).get_sub_mobj(0, 1) -> B
+        """
 
-    @abstractmethod
-    def substitute_sub_mobj(self, substitution: Mobj, *indexes: int) -> Mobj:
-        """Get a new mobj that substitutes its value at the given indexes for a substitution"""
+        if len(indexes) == 0:
+            return self
 
-    @abstractmethod
-    def __eq__(self, __o: object) -> bool:
-        pass
+        index = indexes[0]
+        if index >= len(self.values):
+            raise IndexError(f"Index {index} out of range")
 
-    @abstractmethod
-    def create_dictionary_from(
-        self, evaluation: Mobj, var_dict: Optional[dict[str, Mobj]] = None
-    ) -> dict[str, Mobj]:
-        """Create a dictionary from self and an evaluation of it whith variable names as keys.
-        If a dictionary is provided, it will be updated with the values"""
+        return self.values[index].get_sub_mobj(*indexes[1:])

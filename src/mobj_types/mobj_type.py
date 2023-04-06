@@ -1,27 +1,25 @@
-from __future__ import annotations
-
-from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+
+from src.mobj_types.value_structure import ValueStructure
 from src.mobjs.mobj import Mobj
 
-from src.puint import PositiveOrUndefinedInt, UndefinedEnum
 
-
-if TYPE_CHECKING:
-    from src.mobjs.custom_mobj import CustomMobj
-
-
-@dataclass(frozen=True)
-class MobjType(ABC):
-    """A class that defines a custom mobj type"""
+@dataclass
+class MobjType:
+    """Represents a type of mobj, like Implication, Union, etc."""
 
     name: str
-    value_count: PositiveOrUndefinedInt
+    _structure: ValueStructure
 
-    @abstractmethod
-    def __call__(self, *values: Mobj) -> CustomMobj:
+    @property
+    def structure(self) -> ValueStructure:
+        """The number of values that the MobjType takes"""
+        return self._structure
+
+    def __call__(self, *values: Mobj) -> Mobj:
         """Calling the MobjType returns an instance of the CustomMobj with that MobjType for syntactic sugar"""
-        
-        
+        from src.mobjs.custom_mobj import CustomMobj
+
+        return CustomMobj(self, *values)
+
 
