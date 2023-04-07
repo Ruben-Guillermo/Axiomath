@@ -1,3 +1,5 @@
+# Functions to check that the values provided to create a custom mobj are correct
+
 from src.mobj_types.dynamic_or_uint import DynamicOrUint
 
 

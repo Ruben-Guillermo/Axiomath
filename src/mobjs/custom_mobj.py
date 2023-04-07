@@ -1,4 +1,3 @@
-from typing import TYPE_CHECKING
 from src.mobjs.custom_mobj_values_verifier import (
     check_no_defined_variable_is_used_as_a_variable,
     check_no_variable_is_defined_twice,
@@ -10,7 +9,11 @@ from src.mobjs.variable import Variable
 
 
 class CustomMobj(Mobj):
-    """Represents an instance of a mobj"""
+    """
+    A custom mobj is a mobj that is not a primitive type
+    It can contain other mobjs as values
+    It is an instance of a mobj type
+    """
 
     def __init__(self, type: MobjType, *values: Mobj) -> None:
         self._type = type
