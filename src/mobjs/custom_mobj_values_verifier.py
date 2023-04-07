@@ -51,8 +51,7 @@ def check_no_variable_is_defined_twice(
     - forall x : (x < 3 => exists y : x < 4)
     - forall x : (x < 3 => exists y : (y < 4))
     """
-    for newly_defined_variable in newly_defined_variables:
-        if newly_defined_variable in already_defined_variables:
-            raise ValueError(
-                f"Variable {newly_defined_variable} is used as a mobj defined variable recursively"
-            )
+    if set.intersection(newly_defined_variables, already_defined_variables) != set():
+        raise ValueError(
+            f"Variable {newly_defined_variables} is used as a mobj defined variable recursively"
+        )
