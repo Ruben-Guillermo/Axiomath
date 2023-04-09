@@ -22,13 +22,8 @@ class InferenceRule(ABC):
         """
 
     @abstractmethod
-    def is_applicable(self, scope: Scope, *args: Mobj) -> bool:
+    def infer(self, scope: Scope, *args: Mobj) -> bool:
         """
-        Returns True if the rule can be applied.
-        """
-
-    @abstractmethod
-    def infer(self, scope: Scope, *args: Mobj):
-        """
-        Applies the rule.
+        Returns wether the rule could be applied.
+        If it could, it was applied
         """

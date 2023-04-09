@@ -1,3 +1,4 @@
+from typing import Optional
 from src.mobj_types.mobj_type import MobjType
 from src.mobjs.mobj import Mobj
 from src.mobjs.variable import Variable
@@ -40,6 +41,9 @@ class ScopeTree:
     def add_axioms(self, axioms: list[Mobj]):
         for axiom in axioms:
             self.add_axiom(axiom)
+
+    def get_axiom(self, index: int) -> Optional[Mobj]:
+        return self._axioms[index] if index < len(self._axioms) else None
 
     @property
     def axiom_count(self) -> int:

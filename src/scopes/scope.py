@@ -40,6 +40,9 @@ class Scope:
     def true_statements(self) -> list[Mobj]:
         return self._true_statements
 
+    def get_true_statement(self, index: int) -> Optional[Mobj]:
+        return self._true_statements[index] if index < len(self._true_statements) else None
+
     @property
     def number_of_true_statements(self) -> int:
         return len(self._true_statements)
@@ -56,26 +59,34 @@ class Scope:
     def parent(self) -> Optional[Scope]:
         return self._parent
 
-    def check_mobj_valid(self, mobj: Mobj):
+    def is_mobj_valid(self, mobj: Mobj) -> tuple[bool, str]:
+        """
+        Check if the mobj is valid in the scope. If it is, return True, "". If not, return False, "reason".
+        """
         if not self._tree.mobj_uses_valid_types(mobj):
-            raise Exception(f"Mobj '{mobj}' uses invalid types")
+            return False, "Mobj uses invalid types"
 
         # Check if all variables are used correctly
-        # (We are not using a quantifier variable that already exists in the scope as something else)
+        # example (We are not using a quantifier variable that already exists in the scope as something else)
         for var in mobj.variables:
             free_or_bounded = self.is_free_or_bounded_variable(var)
             quantifier = self.is_quantifier_variable(var)
 
             if var in mobj.defined_variables:
                 if free_or_bounded or not quantifier:
-                    raise Exception(
-                        f"Variable '{var}' is used as a quantifier but is already used as something else"
+                    return (
+                        False,
+                        f"Variable '{var}' is used as a quantifier but is already used as something else",
                     )
+
             else:
                 if not free_or_bounded or quantifier:
-                    raise Exception(
-                        f"Variable '{var}' is used as something else but is already used as a quantifier"
+                    return (
+                        False,
+                        f"Variable '{var}' is used as something else but is already used as a quantifier",
                     )
+
+        return True, ""
 
     def use_inference_rule(self, rule: InferenceRule, *indexes: int):
         mobjs = tuple(self._true_statements[i] for i in indexes)
@@ -87,15 +98,22 @@ class Scope:
         if not rule.types_are_valid(*types):
             raise Exception(f"Types of mobjs are not valid for rule '{rule}'")
 
-        if not rule.is_applicable(self, *mobjs):
-            raise Exception(f"Rule '{rule}' is not applicable to the given mobjs")
+        # Try to apply the rule
+        if not rule.infer(self, *mobjs):
+            raise Exception(f"Rule '{rule}' could not be applied to the given mobjs")
 
-        rule.infer(self, *mobjs)
-
-    def add_true_statement(self, mobj: Mobj):
-        self.check_mobj_valid(mobj)
+    def add_true_statement(self, mobj: Mobj) -> tuple[bool, str]:
+        """
+        Tries to add a new true statement to the scope.
+        If it is valid, it is added and True, "" is returned.
+        If it is not valid, False, "reason" is returned.
+        """
+        valid = self.is_mobj_valid(mobj)
+        if not valid[0]:
+            return valid
 
         self._true_statements.append(mobj)
+        return True, ""
 
     def is_free_variable(self, var: str) -> bool:
         """Recursively checks if the variable is free in this hierarchy"""
